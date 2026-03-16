@@ -33,6 +33,7 @@ Built for exactly what you wanted: coding tasks, remote Q&A, local network/file 
 ### 1. Prerequisites
 - macOS (Apple Silicon)
 - Homebrew
+- **Python 3.12.13 or higher** (required — tiktoken dependency in CrewAI needs it)
 - Ollama (`brew install ollama`)
 - Pulled models:
   ```bash
