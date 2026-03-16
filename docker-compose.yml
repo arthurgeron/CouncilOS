@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  council:
+    build: .
+    container_name: council-os
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: uvicorn api:app --host 0.0.0.0 --port 8000
