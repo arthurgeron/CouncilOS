@@ -55,6 +55,19 @@ pip install -r requirements.txt
 docker compose up -d --build
 ```
 
+#### 3.1.1 Run Smoke Tests (on demand)
+The `smoke-tests` service is behind the `smoke` profile, so it does **not** run during `docker compose up -d --build`.
+
+Run smoke tests against the local Compose stack:
+```bash
+docker compose run --rm smoke-tests
+```
+
+Run smoke tests against a deployed instance:
+```bash
+docker compose run --rm -e COUNCIL_BASE_URL=https://your-deployed-council.example.com smoke-tests
+```
+
 #### 3.2 Native
 
 ##### Setup Environment
