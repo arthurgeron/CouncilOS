@@ -1,3 +1,4 @@
 crewai
+litellm
 fastapi
 uvicorn[standard]
