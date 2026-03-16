@@ -1,5 +1,6 @@
 import os
 os.environ["OPENAI_API_KEY"] = "ollama"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,10 +30,10 @@ class Query(BaseModel):
 
 def run_crew_sync(user_task: str):
     # === STRONG AGENTS (no more looping) ===
-    llm_7b   = LLM(model="ollama/qwen2.5:7b",      base_url="http://localhost:11434", temperature=0.7, keep_alive="-1")
-    llm_14b  = LLM(model="ollama/qwen2.5:14b",     base_url="http://localhost:11434", temperature=0.7, keep_alive="-1")
-    llm_code = LLM(model="ollama/deepseek-coder:6.7b", base_url="http://localhost:11434", temperature=0.3, keep_alive="-1")
-    llm_mod  = LLM(model="ollama/qwen2.5:32b",     base_url="http://localhost:11434", temperature=0.3, keep_alive="-1")
+    llm_7b   = LLM(model="ollama/qwen2.5:7b",      base_url=OLLAMA_BASE_URL, temperature=0.7, keep_alive="-1")
+    llm_14b  = LLM(model="ollama/qwen2.5:14b",     base_url=OLLAMA_BASE_URL, temperature=0.7, keep_alive="-1")
+    llm_code = LLM(model="ollama/deepseek-coder:6.7b", base_url=OLLAMA_BASE_URL, temperature=0.3, keep_alive="-1")
+    llm_mod  = LLM(model="ollama/qwen2.5:32b",     base_url=OLLAMA_BASE_URL, temperature=0.3, keep_alive="-1")
 
     researcher = Agent(
         role="Fast Researcher",
