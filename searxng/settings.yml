@@ -18,6 +18,7 @@ search:
 server:
   port: 8080
   bind_address: "0.0.0.0"
+  limiter: false
   secret_key: "your-random-secret-key-here"   # change this
 
 ui:
