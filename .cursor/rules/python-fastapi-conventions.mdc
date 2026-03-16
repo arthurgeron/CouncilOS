@@ -1,0 +1,24 @@
+---
+description: FastAPI and Python conventions for CouncilOS services
+globs: **/*.py
+alwaysApply: false
+---
+
+# Python FastAPI Conventions
+
+- Preserve existing endpoint contracts unless explicit API changes are requested.
+- Keep these routes stable and backward compatible:
+  - `/run-council`
+  - `/v1/chat/completions`
+  - `/v1/models`
+- Use explicit request/response schemas for external-facing payloads.
+- Return structured, predictable JSON. Avoid shape drift across similar code paths.
+- Fail fast with actionable errors; never swallow exceptions silently.
+- Keep async boundaries clear: avoid blocking the event loop with long synchronous work.
+- Bound concurrency and runtime cost for local hardware reliability.
+- Keep environment-derived configuration explicit (`OLLAMA_BASE_URL`, `SEARXNG_BASE_URL`, etc.).
+- Keep inter-agent handoff payloads schema-stable when returned or validated (`summary`, `evidence`, `open_questions`, `done`).
+- Avoid global mutable state unless required and thread-safe.
+- Add or keep minimal logging for orchestration decisions, retries, and terminal status.
+- No hidden side effects in endpoint handlers; orchestration logic should be traceable and testable.
+- Maintain local-first assumptions: no cloud call is required for core council functionality.

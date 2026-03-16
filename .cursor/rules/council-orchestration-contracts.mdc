@@ -1,0 +1,30 @@
+---
+description: Agent role contracts and deterministic council orchestration rules
+globs: api.py,tools/**/*.py
+alwaysApply: true
+---
+
+# Council Orchestration Contracts
+
+- Keep the council as a 4-agent system with fixed responsibilities and explicit handoffs.
+- Preserve sequential CrewAI orchestration unless the user explicitly requests a process change.
+- Never let Supreme Moderator (qwen2.5:32b) delegate or trigger additional work; it returns the final answer only.
+- Agent boundaries are strict:
+  - Fast Researcher (qwen2.5:7b) gathers external context and facts.
+  - Network & File Scout (qwen2.5:14b) performs local file/network discovery when needed.
+  - Expert Coder (deepseek-coder:6.7b) proposes code only for coding tasks.
+  - Supreme Moderator (qwen2.5:32b) synthesizes final output and stops.
+- Use deterministic handoff payloads between steps:
+  - `summary`: concise result from current agent.
+  - `evidence`: key facts, tool outputs, or references.
+  - `open_questions`: unresolved items, if any.
+  - `done`: boolean completion flag for that role.
+- Avoid role overlap and duplicate tool calls unless needed for validation.
+- For each step, define completion criteria before execution and enforce a single terminal state.
+- Keep tool usage scoped: do not call discovery/search tools when task can be answered from known context.
+- Enforce loop prevention:
+  - bounded retries,
+  - no recursive self-delegation,
+  - no repeated unchanged prompts.
+- Preserve current API behavior and data flow while adding guardrails.
+- If required data is missing, fail explicitly with actionable next input instead of speculative execution.

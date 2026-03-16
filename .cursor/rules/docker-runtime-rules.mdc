@@ -1,0 +1,22 @@
+---
+description: Docker runtime and deployment rules for local CouncilOS stack
+globs: Dockerfile,docker-compose.yml,run-council.sh
+alwaysApply: false
+---
+
+# Docker Runtime Rules
+
+- Preserve service topology: `council`, `open-webui`, `searxng`.
+- Keep runtime local-first and privacy-first; no required internet dependency for core council operation.
+- Do not change published ports, container names, or volume mounts without explicit request.
+- Keep startup deterministic: explicit working directory, command, and required environment values.
+- Preserve `host.docker.internal` pathing for local Ollama integration unless user asks to change it.
+- Keep health and restart behavior predictable (`unless-stopped` unless instructed otherwise).
+- Avoid image bloat: only add dependencies that are required for runtime or build.
+- Do not embed secrets in images or compose files; prefer environment injection.
+- Maintain backward compatibility for OpenWebUI and Cursor integration via `/v1/chat/completions`.
+- Any Docker change must include a quick operational verification plan:
+  - build starts,
+  - containers boot,
+  - council endpoint responds.
+- Avoid hidden side effects in shell scripts; keep `run-council.sh` explicit and auditable.

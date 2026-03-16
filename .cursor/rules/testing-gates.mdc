@@ -1,0 +1,35 @@
+---
+description: Testing gates for CouncilOS Python and orchestration changes
+globs: **/*.py
+alwaysApply: false
+---
+
+# Testing Gates
+
+- Any Python change must include a verification step before completion.
+- For orchestration-related edits, validate both endpoints:
+  - `/run-council`
+  - `/v1/chat/completions`
+- Preserve behavior-first testing: confirm existing happy paths still work before adding enhancements.
+- Any Python or orchestration change MUST introduce or update at least:
+  - one success-path smoke test for both `/run-council` and `/v1/chat/completions`
+  - one failure-path test (timeout, malformed handoff, tool failure, or missing input)
+- We can start with simple inline `if __name__ == "__main__":` checks or pytest — real test files will be added soon.
+- Keep tests deterministic:
+  - stable prompts,
+  - bounded timeouts,
+  - explicit expected shape of output.
+- Validate role boundaries in tests:
+  - Expert Coder (deepseek-coder:6.7b) does not produce non-coding chatter,
+  - Supreme Moderator (qwen2.5:32b) returns final synthesis only.
+- Validate handoff schema in orchestration checks:
+  - `summary`,
+  - `evidence`,
+  - `open_questions`,
+  - `done`.
+- Verify no runaway execution:
+  - bounded retries observed,
+  - task reaches terminal state.
+- If local model/network dependencies are unavailable, report exactly what could not be validated and why.
+- Do not remove or weaken existing coverage to make tests pass.
+- Prefer small targeted tests over broad fragile integration suites for incremental changes.
