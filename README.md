@@ -1,6 +1,3 @@
-
-
-
 # Council OS
 
 **Your private, multi-agent LLM council running locally. Projected and tested on M3 Max Macbook Pro 36GB.**
@@ -46,7 +43,7 @@ Built for exactly what you wanted: coding tasks, remote Q&A, local network/file 
 ### 2. Setup the Council
 ```bash
 git clone https://github.com/arthurgeron/CouncilOS.git
-cd m3-council
+cd CouncilOS
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -98,7 +95,7 @@ See `tools.py` to add more.
 
 ## Project Structure
 ```
-m3-council/
+CouncilOS/
 ├── api.py
 ├── tools.py
 ├── com.m3.council.plist
@@ -115,5 +112,3 @@ m3-council/
 **Made with ❤️ on an M3 Max**  
 Your private AI council is ready.
 ```
-
----
