@@ -100,14 +100,14 @@ async def openai_chat_completions(request: Request):
         "id": f"chatcmpl-{int(time.time())}",
         "object": "chat.completion",
         "created": int(time.time()),
-        "model": "m3-council",
+        "model": "council-os",
         "choices": [{"index": 0, "message": {"role": "assistant", "content": str(result)}, "finish_reason": "stop"}],
         "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     }
 
 @app.get("/v1/models")
 async def list_models():
-    return {"object": "list", "data": [{"id": "m3-council", "object": "model", "created": int(time.time()), "owned_by": "m3-council"}]}
+    return {"object": "list", "data": [{"id": "council-os", "object": "model", "created": int(time.time()), "owned_by": "council-os"}]}
 
 @app.get("/v1/openapi.json")
 async def openapi_spec():
