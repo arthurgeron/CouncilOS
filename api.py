@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 import uvicorn
 import time
 
-from tools import network_scout
+from tools import network_scout, web_search
 
 app = FastAPI(title="M3 Council API")
 
@@ -38,8 +38,9 @@ def run_crew_sync(user_task: str):
     researcher = Agent(
         role="Fast Researcher",
         goal="Quickly gather relevant facts and context",
-        backstory="You are a fast, no-nonsense researcher. You give concise, useful information and never overthink.",
+        backstory="You are a fast, no-nonsense researcher. Use the Web Search Tool whenever external or up-to-date facts would improve accuracy, even if the user does not explicitly ask to search.",
         llm=llm_7b,
+        tools=[web_search],
         verbose=True
     )
 
