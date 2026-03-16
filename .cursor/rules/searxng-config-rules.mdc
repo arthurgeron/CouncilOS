@@ -1,0 +1,19 @@
+---
+description: SearXNG configuration rules for CouncilOS web search integration
+globs: searxng/**/*.yml,searxng/**/*.toml
+alwaysApply: false
+---
+
+# SearXNG Config Rules
+
+- Keep SearXNG configuration explicit, minimal, and local-service compatible.
+- Preserve current integration contract used by `SEARXNG_BASE_URL`.
+- Keep response format compatibility for council tooling (`json` must remain available).
+- Treat `secret_key` as required security config: never commit placeholder values for production use.
+- Prefer conservative timeouts and rate limits to protect local node stability.
+- Any engine additions/removals must be intentional and documented by rationale.
+- Do not disable protections (limiter, bot controls, safe search) without explicit user approval.
+- Keep bind/port settings compatible with Docker Compose wiring unless requested otherwise.
+- Validate that config changes do not break startup or council search calls.
+- Avoid broad config rewrites; make smallest safe edit needed for the requested outcome.
+- If security/performance trade-offs are introduced, call them out clearly in the final response.

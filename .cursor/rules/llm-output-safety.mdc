@@ -1,0 +1,27 @@
+---
+description: Safety and determinism requirements for LLM outputs and handoffs
+globs: **/*.py
+alwaysApply: false
+---
+
+# LLM Output Safety
+
+- Require structured intermediate outputs for inter-agent handoffs.
+- Handoff schema should remain consistent and minimal:
+  - `summary` (string),
+  - `evidence` (list),
+  - `open_questions` (list),
+  - `done` (boolean).
+- Enforce strict role prompting for Fast Researcher (qwen2.5:7b), Network & File Scout (qwen2.5:14b), Expert Coder (deepseek-coder:6.7b), and Supreme Moderator (qwen2.5:32b) to prevent cross-role contamination.
+- Keep Supreme Moderator (qwen2.5:32b) as the terminal node: one final answer, no further delegation.
+- Prevent runaway loops with explicit controls:
+  - max steps,
+  - max retries,
+  - unchanged-prompt repetition guard.
+- Add timeout budgets per agent and for total council execution.
+- If an agent output is malformed, apply bounded repair logic; then fail explicitly.
+- Never treat unverifiable model claims as facts without evidence.
+- Preserve deterministic ordering of evidence and synthesis inputs.
+- Do not expose secrets, local file paths, or internal infra details unless user requested and safe.
+- Prefer concise, high-signal final outputs over verbose chain-of-thought style dumps.
+- Keep safety behavior backward compatible for current CouncilOS clients.
