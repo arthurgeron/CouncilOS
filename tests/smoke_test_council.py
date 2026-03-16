@@ -49,12 +49,23 @@ def _post_json(path: str, payload: dict):
         return exc.code, parsed
 
 
+def _iter_dict_nodes(node):
+    if isinstance(node, dict):
+        yield node
+        for value in node.values():
+            yield from _iter_dict_nodes(value)
+        return
+    if isinstance(node, list):
+        for item in node:
+            yield from _iter_dict_nodes(item)
+
+
 def _assert_handoff_schema_if_observable(response_obj: dict) -> None:
-    serialized = json.dumps(response_obj)
-    present = [key for key in HANDOFF_SCHEMA_KEYS if key in serialized]
-    if present:
-        missing = [key for key in HANDOFF_SCHEMA_KEYS if key not in serialized]
-        assert not missing, f"Handoff schema incomplete, missing: {missing}"
+    for candidate in _iter_dict_nodes(response_obj):
+        present = [key for key in HANDOFF_SCHEMA_KEYS if key in candidate]
+        if present:
+            missing = [key for key in HANDOFF_SCHEMA_KEYS if key not in candidate]
+            assert not missing, f"Handoff schema incomplete, missing: {missing}"
 
 
 def _assert_role_boundaries_if_observable(text: str) -> None:
