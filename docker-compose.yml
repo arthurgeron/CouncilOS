@@ -6,10 +6,12 @@ services:
     environment:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - SEARXNG_BASE_URL=http://searxng:8080
+      - COUNCIL_MEMORY_DIR=/data/council_memory
     ports:
       - "8000:8000"
     volumes:
       - .:/app
+      - council-memory:/data/council_memory
     extra_hosts:
       - "host.docker.internal:host-gateway"
     working_dir: /app
@@ -52,3 +54,4 @@ services:
 
 volumes:
   open-webui:
+  council-memory:
