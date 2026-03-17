@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 import uvicorn
 import time
 
-from tools import network_scout, web_search
+from tools import memory_recall, network_scout, web_search
 
 app = FastAPI(title="M3 Council API")
 
@@ -37,18 +37,32 @@ def run_crew_sync(user_task: str):
     researcher = Agent(
         role="Fast Researcher",
         goal="Quickly gather relevant facts and context",
-        backstory="You are a fast, no-nonsense researcher. Use the Web Search Tool whenever external or up-to-date facts would improve accuracy, even if the user does not explicitly ask to search.",
+        backstory=(
+            "You are a fast, no-nonsense researcher. Use the Web Search Tool whenever "
+            "external or up-to-date facts would improve accuracy, even if the user does "
+            "not explicitly ask to search. Use Session Memory Recall Tool only when the "
+            "task clearly requires history (for example: remember last time, update our "
+            "previous plan, from earlier session, or clear internal relevance). "
+            "When handing off, keep schema strict: summary, evidence, open_questions, done."
+        ),
         llm=llm_7b,
-        tools=[web_search],
+        tools=[web_search, memory_recall],
         verbose=True
     )
 
     scout = Agent(
         role="Network & File Scout",
         goal="Find files, folders, and local network resources when relevant",
-        backstory="You know the user's entire Mac and any connected NAS. You only use tools when the task actually needs file/network discovery.",
+        backstory=(
+            "You know the user's entire Mac and any connected NAS. You only use tools "
+            "when the task actually needs file/network discovery. Use Session Memory "
+            "Recall Tool only when the task clearly requires history (for example: "
+            "remember last time, update our previous plan, from earlier session, or "
+            "clear internal relevance). When handing off, keep schema strict: summary, "
+            "evidence, open_questions, done."
+        ),
         llm=llm_14b,
-        tools=[network_scout],
+        tools=[network_scout, memory_recall],
         verbose=True
     )
 
