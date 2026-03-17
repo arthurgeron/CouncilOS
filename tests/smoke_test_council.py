@@ -241,6 +241,103 @@ def test_chat_completions_memory_failure_path() -> None:
     _assert_role_boundaries_if_observable(content)
 
 
+def test_quality_gate_pass_fail_retry_behavior() -> None:
+    import api as api_module
+
+    original_runner = api_module._run_crew_single_attempt
+    original_submit = api_module._submit_memory_write_post_crew
+
+    try:
+        # pass path: no retry
+        pass_calls = []
+        pass_responses = iter(
+            [
+                (
+                    "pass-final",
+                    {"score": 9.0, "critique": "Looks good.", "pass": True, "suggestions": []},
+                ),
+            ]
+        )
+
+        def _pass_runner(user_task: str, retry_critique: str = ""):
+            pass_calls.append(retry_critique)
+            return next(pass_responses)
+
+        api_module._run_crew_single_attempt = _pass_runner
+        api_module._submit_memory_write_post_crew = lambda **kwargs: None
+        pass_result = api_module.run_crew_sync("test task", "/run-council", "req-pass")
+        assert pass_result == "pass-final"
+        assert pass_calls == [""], pass_calls
+
+        # fail + retry path: exactly one retry with critique injection
+        retry_calls = []
+        retry_responses = iter(
+            [
+                (
+                    "retry-first",
+                    {
+                        "score": 3.0,
+                        "critique": "Needs stronger factual grounding.",
+                        "pass": False,
+                        "suggestions": ["Add verifiable evidence."],
+                    },
+                ),
+                (
+                    "retry-second",
+                    {"score": 8.0, "critique": "Now sufficient.", "pass": True, "suggestions": []},
+                ),
+            ]
+        )
+
+        def _retry_runner(user_task: str, retry_critique: str = ""):
+            retry_calls.append(retry_critique)
+            return next(retry_responses)
+
+        api_module._run_crew_single_attempt = _retry_runner
+        retry_result = api_module.run_crew_sync("test task", "/run-council", "req-retry")
+        assert retry_result == "retry-second"
+        assert len(retry_calls) == 2, retry_calls
+        assert retry_calls[0] == ""
+        assert "Needs stronger factual grounding." in retry_calls[1]
+
+        # bounded behavior: no second retry beyond max=1
+        bounded_calls = []
+        bounded_responses = iter(
+            [
+                (
+                    "bounded-first",
+                    {
+                        "score": 2.0,
+                        "critique": "First failure.",
+                        "pass": False,
+                        "suggestions": ["Improve evidence quality."],
+                    },
+                ),
+                (
+                    "bounded-second",
+                    {
+                        "score": 1.0,
+                        "critique": "Still failing after retry.",
+                        "pass": False,
+                        "suggestions": ["Do not retry again."],
+                    },
+                ),
+            ]
+        )
+
+        def _bounded_runner(user_task: str, retry_critique: str = ""):
+            bounded_calls.append(retry_critique)
+            return next(bounded_responses)
+
+        api_module._run_crew_single_attempt = _bounded_runner
+        bounded_result = api_module.run_crew_sync("test task", "/run-council", "req-bounded")
+        assert bounded_result == "bounded-second"
+        assert len(bounded_calls) == 2, bounded_calls
+    finally:
+        api_module._run_crew_single_attempt = original_runner
+        api_module._submit_memory_write_post_crew = original_submit
+
+
 if __name__ == "__main__":
     tests = [
         test_run_council_success_path,
@@ -252,6 +349,7 @@ if __name__ == "__main__":
         test_chat_completions_memory_non_relevant_path,
         test_run_council_memory_failure_path,
         test_chat_completions_memory_failure_path,
+        test_quality_gate_pass_fail_retry_behavior,
     ]
     failures = 0
     for test_fn in tests:

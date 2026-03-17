@@ -13,7 +13,8 @@ alwaysApply: true
 - Keep CrewAI execution mode sequential unless an explicit migration is requested and justified.
 - Use strict role boundaries:
   - Fast Researcher (qwen2.5:7b) for quick context/facts.
-  - Network & File Scout (qwen2.5:14b) for local discovery tasks.
+  - Resource Scout (qwen2.5:7b) for local discovery tasks.
+  - Quality & Evidence Gate (qwen2.5:14b) for hallucination/evidence consistency checks (no tools).
   - Expert Coder (deepseek-coder:6.7b) for code generation tasks only.
   - Supreme Moderator (qwen2.5:32b) for final synthesis only.
 - Favor deterministic behavior: explicit inputs, explicit outputs, stable ordering, and bounded retries.

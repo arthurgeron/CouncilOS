@@ -12,7 +12,7 @@ alwaysApply: false
   - `evidence` (list),
   - `open_questions` (list),
   - `done` (boolean).
-- Enforce strict role prompting for Fast Researcher (qwen2.5:7b), Network & File Scout (qwen2.5:14b), Expert Coder (deepseek-coder:6.7b), and Supreme Moderator (qwen2.5:32b) to prevent cross-role contamination.
+- Enforce strict role prompting for Fast Researcher (qwen2.5:7b), Resource Scout (qwen2.5:7b), Quality & Evidence Gate (qwen2.5:14b, no tools), Expert Coder (deepseek-coder:6.7b), and Supreme Moderator (qwen2.5:32b) to prevent cross-role contamination.
 - Keep Supreme Moderator (qwen2.5:32b) as the terminal node: one final answer, no further delegation.
 - Prevent runaway loops with explicit controls:
   - max steps,

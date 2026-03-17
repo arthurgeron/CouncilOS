@@ -6,12 +6,13 @@ alwaysApply: true
 
 # Council Orchestration Contracts
 
-- Keep the council as a 4-agent system with fixed responsibilities and explicit handoffs.
+- Keep the council as a 5-agent system with fixed responsibilities and explicit handoffs.
 - Preserve sequential CrewAI orchestration unless the user explicitly requests a process change.
 - Never let Supreme Moderator (qwen2.5:32b) delegate or trigger additional work; it returns the final answer only.
 - Agent boundaries are strict:
   - Fast Researcher (qwen2.5:7b) gathers external context and facts.
-  - Network & File Scout (qwen2.5:14b) performs local file/network discovery when needed.
+  - Resource Scout (qwen2.5:7b) performs local file/network discovery when needed.
+  - Quality & Evidence Gate (qwen2.5:14b) performs quality/evidence consistency checks with no tools.
   - Expert Coder (deepseek-coder:6.7b) proposes code only for coding tasks.
   - Supreme Moderator (qwen2.5:32b) synthesizes final output and stops.
 - Use deterministic handoff payloads between steps:
