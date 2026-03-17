@@ -6,16 +6,6 @@ from datetime import datetime, timezone
 from crewai.tools import tool
 
 
-HISTORY_HINTS = (
-    "remember last time",
-    "update our previous plan",
-    "from earlier session",
-    "previous session",
-    "earlier session",
-    "last time",
-)
-
-
 def _extract_memory_payload(query: str) -> tuple[str, list[str]]:
     summary = ""
     facts: list[str] = []
@@ -30,13 +20,6 @@ def _extract_memory_payload(query: str) -> tuple[str, list[str]]:
             facts = [part.strip()[:120] for part in raw_facts.split("|") if part.strip()][:8]
 
     return summary, facts
-
-
-def _should_recall(query: str) -> bool:
-    lowered = query.lower()
-    return any(hint in lowered for hint in HISTORY_HINTS)
-
-
 @tool("Session Memory Recall Tool")
 def memory_recall(query: str) -> str:
     """
@@ -67,9 +50,6 @@ def memory_recall(query: str) -> str:
         payload_text = json.dumps(payload, ensure_ascii=True)
         payload_id = hashlib.sha1(payload_text.encode("utf-8")).hexdigest()
         collection.upsert(documents=[payload_text], ids=[payload_id], metadatas=[{"kind": "session_summary"}])
-
-    if not _should_recall(query):
-        return "Memory recall skipped: no clear history intent detected."
 
     recalled = collection.query(query_texts=[query], n_results=3)
     documents = recalled.get("documents", [[]])[0]
