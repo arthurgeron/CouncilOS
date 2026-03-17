@@ -37,5 +37,18 @@ services:
     environment:
       - SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml
 
+  smoke-tests:
+    image: python:3.12-slim
+    profiles: ["smoke"]
+    working_dir: /tests
+    volumes:
+      - ./tests:/tests:ro
+    environment:
+      - COUNCIL_BASE_URL=http://council:8000
+      - COUNCIL_SMOKE_TIMEOUT=90
+    command: python smoke_test_council.py
+    depends_on:
+      - council
+
 volumes:
   open-webui:
