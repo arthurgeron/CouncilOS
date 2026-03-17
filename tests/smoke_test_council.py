@@ -21,6 +21,7 @@ MISSING_INPUT_CURL = """curl -sS -X POST http://localhost:8000/run-council \
   -d '{}'"""
 
 HANDOFF_SCHEMA_KEYS = ("summary", "evidence", "open_questions", "done")
+NO_RELEVANT_MEMORY = "No relevant prior session memory found."
 ROLE_BOUNDARIES = {
     "expert_coder": "Expert Coder (deepseek-coder:6.7b) remains code-only",
     "supreme_moderator": "Supreme Moderator (qwen2.5:32b) is terminal",
@@ -158,6 +159,88 @@ def test_chat_completions_memory_integration_success_path() -> None:
     _assert_role_boundaries_if_observable(content)
 
 
+def test_run_council_memory_non_relevant_path() -> None:
+    status, body = _post_json(
+        "/run-council",
+        {
+            "task": (
+                "Call Session Memory Recall Tool with this exact query first: "
+                "'Generate a 3-word title for this text: fast release notes.' "
+                "If memory is not relevant, include this exact line in your answer: "
+                "'No relevant prior session memory found.' Then complete the title task."
+            )
+        },
+    )
+    assert status == 200
+    assert isinstance(body, dict)
+    result = str(body.get("result", ""))
+    assert result.strip()
+    assert "Memory unavailable:" not in result, result
+    _assert_handoff_schema_if_observable(body)
+    _assert_role_boundaries_if_observable(result)
+
+
+def test_chat_completions_memory_non_relevant_path() -> None:
+    status, body = _post_json(
+        "/v1/chat/completions",
+        {
+            "model": "council-os",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "Call Session Memory Recall Tool with this exact query first: "
+                        "'Generate 3 concise tags for this sentence.' "
+                        "If memory is not relevant, include this exact line in your answer: "
+                        "'No relevant prior session memory found.' Then complete the tags task."
+                    ),
+                }
+            ],
+        },
+    )
+    assert status == 200
+    assert isinstance(body, dict)
+    assert body.get("object") == "chat.completion"
+    assert isinstance(body.get("choices"), list) and body["choices"]
+    content = str(body["choices"][0]["message"]["content"])
+    assert content.strip()
+    assert NO_RELEVANT_MEMORY in content, content
+
+
+def test_run_council_memory_failure_path() -> None:
+    status, body = _post_json(
+        "/run-council",
+        {"task": "remember last time and continue our previous plan with context from earlier sessions"},
+    )
+    assert status == 200
+    assert isinstance(body, dict)
+    result_text = str(body.get("result", ""))
+    assert result_text.strip()
+    _assert_handoff_schema_if_observable(body)
+    _assert_role_boundaries_if_observable(result_text)
+
+
+def test_chat_completions_memory_failure_path() -> None:
+    status, body = _post_json(
+        "/v1/chat/completions",
+        {
+            "model": "council-os",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "from earlier session, compare prior decisions and continue previous plan",
+                }
+            ],
+        },
+    )
+    assert status == 200
+    assert isinstance(body, dict)
+    content = body["choices"][0]["message"]["content"]
+    assert isinstance(content, str) and content.strip()
+    _assert_handoff_schema_if_observable(body)
+    _assert_role_boundaries_if_observable(content)
+
+
 if __name__ == "__main__":
     tests = [
         test_run_council_success_path,
@@ -165,6 +248,10 @@ if __name__ == "__main__":
         test_run_council_missing_input_failure_path,
         test_run_council_memory_integration_success_path,
         test_chat_completions_memory_integration_success_path,
+        test_run_council_memory_non_relevant_path,
+        test_chat_completions_memory_non_relevant_path,
+        test_run_council_memory_failure_path,
+        test_chat_completions_memory_failure_path,
     ]
     failures = 0
     for test_fn in tests:
