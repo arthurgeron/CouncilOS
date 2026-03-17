@@ -113,11 +113,58 @@ def test_run_council_missing_input_failure_path() -> None:
     assert any(key in body for key in ("detail", "error", "message")), body
 
 
+def test_run_council_memory_integration_success_path() -> None:
+    status, body = _post_json(
+        "/run-council",
+        {
+            "task": (
+                "remember last time and update our previous plan.\n"
+                "session_summary: Prior session focused on minimal memory integration.\n"
+                "key_facts: Keep sequential CrewAI | Preserve endpoint contracts"
+            )
+        },
+    )
+    assert status == 200
+    assert isinstance(body, dict)
+    assert isinstance(body.get("result"), str) and body["result"].strip()
+    _assert_handoff_schema_if_observable(body)
+    _assert_role_boundaries_if_observable(body["result"])
+
+
+def test_chat_completions_memory_integration_success_path() -> None:
+    status, body = _post_json(
+        "/v1/chat/completions",
+        {
+            "model": "council-os",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        "from earlier session, remember last time and update our previous plan.\n"
+                        "session_summary: Prior session focused on memory recall behavior.\n"
+                        "key_facts: Use memory only when history is relevant | Keep responses concise"
+                    ),
+                }
+            ],
+        },
+    )
+    assert status == 200
+    assert isinstance(body, dict)
+    assert body.get("object") == "chat.completion"
+    assert isinstance(body.get("choices"), list) and body["choices"]
+    content = body["choices"][0]["message"]["content"]
+    assert isinstance(content, str) and content.strip()
+    _assert_handoff_schema_if_observable(body)
+    _assert_role_boundaries_if_observable(content)
+
+
 if __name__ == "__main__":
     tests = [
         test_run_council_success_path,
         test_chat_completions_success_path,
         test_run_council_missing_input_failure_path,
+        test_run_council_memory_integration_success_path,
+        test_chat_completions_memory_integration_success_path,
     ]
     failures = 0
     for test_fn in tests:
