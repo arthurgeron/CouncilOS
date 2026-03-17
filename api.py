@@ -29,7 +29,6 @@ class Query(BaseModel):
     task: str
 
 def run_crew_sync(user_task: str):
-    # === STRONG AGENTS (no more looping) ===
     llm_7b   = LLM(model="ollama/qwen2.5:7b",      base_url=OLLAMA_BASE_URL, temperature=0.7, keep_alive="-1")
     llm_14b  = LLM(model="ollama/qwen2.5:14b",     base_url=OLLAMA_BASE_URL, temperature=0.7, keep_alive="-1")
     llm_code = LLM(model="ollama/deepseek-coder:6.7b", base_url=OLLAMA_BASE_URL, temperature=0.3, keep_alive="-1")
@@ -83,7 +82,6 @@ def run_crew_sync(user_task: str):
     )
     return crew.kickoff()
 
-# ====================== OPENWEBUI & COUNCIL ENDPOINTS (unchanged) ======================
 @app.post("/run-council")
 async def run_council(query: Query):
     loop = asyncio.get_running_loop()
