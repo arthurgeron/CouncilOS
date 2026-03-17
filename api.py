@@ -33,6 +33,30 @@ memory_write_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="me
 memory_logger = logging.getLogger("council.memory")
 HANDOFF_SCHEMA_TEXT = "summary, evidence, open_questions, done"
 QUALITY_GATE_RETRY_MAX = 1
+CODING_REQUEST_HINTS = (
+    "code",
+    "coding",
+    "bug",
+    "fix",
+    "debug",
+    "refactor",
+    "function",
+    "class",
+    "method",
+    "api endpoint",
+    "stack trace",
+    "exception",
+    "error:",
+    "traceback",
+    "typescript",
+    "javascript",
+    "python",
+    ".py",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+)
 
 class Query(BaseModel):
     task: str
@@ -111,6 +135,11 @@ def _parse_quality_gate_output(text: str):
         "pass": pass_value,
         "suggestions": suggestions_value,
     }
+
+
+def _is_coding_request(user_task: str) -> bool:
+    normalized = user_task.lower()
+    return any(hint in normalized for hint in CODING_REQUEST_HINTS)
 
 def _emit_memory_write_failed_event(
     endpoint: str,
@@ -280,12 +309,17 @@ def _run_crew_single_attempt(user_task: str, retry_critique: str = ""):
         context=[task_researcher],
         expected_output=f"Return ONLY a JSON object with keys: {HANDOFF_SCHEMA_TEXT}."
     )
-    task_coder = Task(
-        description="Review the previous handoff and provide code-oriented analysis only when coding is required.",
-        agent=coder,
-        context=[task_scout],
-        expected_output=f"Return ONLY a JSON object with keys: {HANDOFF_SCHEMA_TEXT}."
-    )
+    use_coder = _is_coding_request(user_task)
+    executed_tasks = [task_researcher, task_scout]
+    if use_coder:
+        task_coder = Task(
+            description="Review the previous handoff and provide code-oriented analysis only when coding is required.",
+            agent=coder,
+            context=[task_scout],
+            expected_output=f"Return ONLY a JSON object with keys: {HANDOFF_SCHEMA_TEXT}."
+        )
+        executed_tasks.append(task_coder)
+
     task_quality_gate = Task(
         description=(
             "Review the full chain for hallucination risk, evidence support, consistency, and confidence. "
@@ -293,7 +327,7 @@ def _run_crew_single_attempt(user_task: str, retry_critique: str = ""):
             "pass (bool), suggestions (max 2 items)."
         ),
         agent=quality_gate,
-        context=[task_researcher, task_scout, task_coder],
+        context=executed_tasks,
         expected_output=(
             '{"score": 0-10, "critique": "one sentence", "pass": true|false, '
             '"suggestions": ["item1", "item2"]}'
@@ -302,13 +336,17 @@ def _run_crew_single_attempt(user_task: str, retry_critique: str = ""):
     task_moderator = Task(
         description="Provide the final answer using prior validated context. Never delegate.",
         agent=moderator,
-        context=[task_researcher, task_scout, task_coder, task_quality_gate],
+        context=executed_tasks + [task_quality_gate],
         expected_output="Clear, useful final answer from the Supreme Moderator. Keep it natural and to the point."
     )
+    crew_agents = [researcher, scout, quality_gate, moderator]
+    if use_coder:
+        crew_agents.insert(2, coder)
+    crew_tasks = executed_tasks + [task_quality_gate, task_moderator]
 
     crew = Crew(
-        agents=[researcher, scout, coder, quality_gate, moderator],
-        tasks=[task_researcher, task_scout, task_coder, task_quality_gate, task_moderator],
+        agents=crew_agents,
+        tasks=crew_tasks,
         process=Process.sequential,   # ← much more stable than hierarchical
         verbose=True
     )
